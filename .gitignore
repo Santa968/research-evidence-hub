@@ -13,6 +13,12 @@ out/
 dist/
 .vercel/
 *.tsbuildinfo
+.dev.vars
+.dev.vars.*
+.wrangler/
+.vinext/
+.sites-runtime/
+outputs/
 
 # Python and evaluation artifacts
 .venv/

@@ -1,0 +1,21 @@
+"use client";
+import {useState,useEffect,useRef} from "react";
+import Link from "next/link";
+import {Modal} from "./shell";
+import {Icon} from "./icons";
+import {articleById} from "../../lib/content";
+import type {Answer} from "../../lib/ask";
+type Quota={remaining:number;limit:number;reset_at:string};
+export function AskPanel({articleId,onClose}:{articleId?:string;onClose:()=>void}) {
+ const [question,setQuestion]=useState(""),[asked,setAsked]=useState(""),[answer,setAnswer]=useState<Answer|null>(null),[error,setError]=useState(""),[busy,setBusy]=useState(false),[quota,setQuota]=useState<Quota|null>(null);const input=useRef<HTMLTextAreaElement>(null);const current=articleById(articleId||"");
+ useEffect(()=>{const controller=new AbortController();fetch("/api/usage",{signal:controller.signal}).then(r=>r.json() as Promise<{quota?:Quota}>).then(d=>{if(d.quota)setQuota(d.quota);}).catch(()=>{});return()=>controller.abort();},[]);
+ async function submit(){if(!question.trim()||busy)return;setBusy(true);setError("");setAnswer(null);setAsked(question.trim());try{const r=await fetch("/api/ask",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({question:question.trim(),article_id:articleId,request_id:crypto.randomUUID()})});const data=await r.json() as Answer & {quota?:Quota;error?:{message?:string}};if(data.quota)setQuota(data.quota);if(!r.ok)throw new Error(data.error?.message||"暂时无法回答，请稍后重试。");setAnswer(data);}catch(e){setError(e instanceof Error?e.message:"网络连接中断，请稍后重试。");}finally{setBusy(false);}}
+ return <Modal drawer onClose={onClose} label="向知识库提问"><div className="panel-header"><div><Icon name="ask"/><strong>向知识库提问</strong></div><button className="icon-button" aria-label="关闭答疑" onClick={onClose}><Icon name="x"/></button></div>
+ <div className="panel-body">{current&&<Link href={`/knowledge/${current.id}`} className="context-reference" onClick={onClose}><Icon name="file" size={15}/>{current.title}</Link>}
+ {!asked&&<div className="ask-start"><div className="ask-mark"><Icon name="sparkles" size={25}/></div><h2>想弄明白哪一步？</h2><div className="suggestion-list">{(current?[`解释一下「${current.title}」的核心概念`,`这篇内容有什么实际例子？`]:["Agent 与普通聊天有什么区别？","MCP Server 和工具有什么区别？","为什么多步调用更容易失败？"]).map(q=><button key={q} onClick={()=>{setQuestion(q);input.current?.focus();}}>{q}<Icon name="arrow-up-right" size={14}/></button>)}</div></div>}
+ {asked&&<div className="question-bubble">{asked}</div>}
+ {busy&&<div className="answer-loading" role="status"><span className="loading-dot"/>正在核对知识库中的资料…</div>}
+ {error&&<div className="answer-error" role="alert"><Icon name="warning" size={18}/><p>{error}</p></div>}
+ {answer&&<div className="answer-content" aria-live="polite"><div className="answer-byline"><Icon name={answer.status==="answered"?"book":"search"} size={16}/><span>{answer.status==="answered"?"依据知识库回答":"资料尚未覆盖"}</span>{answer.cached&&<span className="muted">已保存的回答</span>}</div><div className="answer-text">{answer.answer.split(/(\[S\d+\])/g).map((part,i)=>{const c=answer.citations.find(c=>`[${c.id}]`===part);return c?<a key={i} href={c.href||`/knowledge/${c.article_id}#${c.anchor}`} className="inline-citation" onClick={onClose}>{part}</a>:<span key={i}>{part}</span>;})}</div>{answer.citations.length>0&&<div className="answer-sources">{answer.citations.map(c=><details key={c.id}><summary><span>{c.id.slice(1)}</span><Link href={c.href||`/knowledge/${c.article_id}#${c.anchor}`} onClick={onClose}>{c.title}</Link><Icon name="down" size={14}/></summary><p>{c.excerpt}</p></details>)}</div>}</div>}
+ </div><form className="ask-compose" onSubmit={e=>{e.preventDefault();submit();}}><label className="sr-only" htmlFor="question">输入问题</label><textarea id="question" ref={input} value={question} maxLength={2000} placeholder="输入你的问题…" onChange={e=>setQuestion(e.target.value)} onKeyDown={e=>{if(e.key==="Enter"&&!e.shiftKey&&!e.nativeEvent.isComposing){e.preventDefault();submit();}}}/><div className="compose-bottom"><span>{quota?`今日剩余 ${quota.remaining} / ${quota.limit} 次`:"回答将附资料来源"}</span><button className="send-button" type="submit" disabled={busy||!question.trim()} aria-label="发送问题"><Icon name="send" size={16}/></button></div></form></Modal>;
+}

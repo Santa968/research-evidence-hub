@@ -1,0 +1,484 @@
+[
+  {
+    "id": "what-is-agent",
+    "title": "Agent 如何从回答走向行动",
+    "summary": "模型、工具与反馈，如何组成一个能执行任务的系统。",
+    "category": "Agent 基础",
+    "level": "入门",
+    "minutes": 4,
+    "icon": "sparkles",
+    "updatedAt": "2026-11-03",
+    "tags": [
+      "Agent",
+      "智能体",
+      "工作流",
+      "workflow"
+    ],
+    "sources": [
+      {
+        "title": "Anthropic · Building effective agents",
+        "url": "https://www.anthropic.com/research/building-effective-agents",
+        "version": "2024-12-19，本文采用其中的架构区分"
+      }
+    ],
+    "sections": [
+      {
+        "id": "distinction",
+        "title": "先区分模型与系统",
+        "paragraphs": [
+          "语言模型根据输入生成内容；Agent 则是围绕模型组织起来的任务执行系统。系统把工具、上下文和执行结果交给模型，再由宿主程序落实模型提出的动作。一个会写旅行计划的聊天窗口，与能够查询班次并检查约束的应用，拥有不同的执行边界。",
+          "Agent 并没有统一到所有研究都相同的定义。Anthropic 的一种架构区分是：工作流沿预先编写的代码路径组织模型和工具，Agent 则让模型动态选择过程与工具使用。这里用这一区分帮助理解，而不把它当成唯一命名标准。"
+        ]
+      },
+      {
+        "id": "loop",
+        "title": "一个最小的行动循环",
+        "paragraphs": [
+          "以查询某篇论文为例，系统先把问题与可用搜索工具交给模型。模型提出搜索请求，程序执行搜索，把结果放回上下文。模型可能继续读取原文，也可能在证据足够时直接回答。",
+          "决定调用不等于已经执行。执行器负责参数校验、访问控制、真正调用和错误返回；模型负责在给定信息下提出下一步。这个循环要有停止条件和调用预算，避免重复操作或提前结束。"
+        ],
+        "flow": [
+          "用户目标",
+          "模型选择",
+          "程序执行",
+          "结果反馈"
+        ],
+        "bullets": [
+          "目标：最终要满足什么条件，而不只是生成一段流畅文字。",
+          "工具：系统实际允许调用的能力。",
+          "反馈：工具返回、错误和可观察的任务状态。",
+          "边界：权限、时间和费用由宿主系统控制。"
+        ]
+      },
+      {
+        "id": "choice",
+        "title": "从简单方案开始",
+        "paragraphs": [
+          "并非所有问题都需要 Agent。固定的资料摘要可能只需一次模型请求；流程稳定的审批可以采用确定的工作流。只有当路径需要依据中间结果调整时，动态规划的价值才更明显。",
+          "更复杂的系统通常也带来更多调用、更长延迟和更多失败点。选择架构时，先明确任务目标和可验证结果，再逐步增加自主程度。"
+        ]
+      }
+    ],
+    "review_status": "reviewed"
+  },
+  {
+    "id": "tool-calling",
+    "title": "一次工具调用是怎样发生的",
+    "summary": "工具选择、结构化参数和实际执行，是三个不同的步骤。",
+    "category": "工具调用",
+    "level": "入门",
+    "minutes": 4,
+    "icon": "wrench",
+    "updatedAt": "2026-11-03",
+    "tags": [
+      "tool calling",
+      "函数调用",
+      "参数",
+      "执行器",
+      "schema"
+    ],
+    "sources": [
+      {
+        "title": "MCP · Tools specification",
+        "url": "https://modelcontextprotocol.io/specification/2025-11-25/server/tools",
+        "version": "2025-11-25"
+      }
+    ],
+    "sections": [
+      {
+        "id": "contract",
+        "title": "工具先提供一份契约",
+        "paragraphs": [
+          "工具是模型可以选择的能力入口。它通常有名称、用途描述和输入结构。输入结构说明参数名称、类型、必填项等信息，例如查询天气需要提供地点。",
+          "工具描述帮助模型判断何时使用；输入 schema 帮助约束调用格式。格式正确仍不等于业务正确：把日期、单位或实体对象填错，也可能得到一个看似成功的响应。"
+        ],
+        "code": "{\n  \"name\": \"get_weather\",\n  \"inputSchema\": {\n    \"type\": \"object\",\n    \"properties\": {\"city\": {\"type\": \"string\"}},\n    \"required\": [\"city\"]\n  }\n}"
+      },
+      {
+        "id": "execution",
+        "title": "模型提出调用，程序真正执行",
+        "paragraphs": [
+          "模型根据当前问题生成工具名称和结构化参数。宿主程序收到请求后检查工具是否存在、参数是否合规、权限是否允许，再调用对应程序或服务。MCP 场景中，客户端通过 tools/call 把请求发给 Server。",
+          "程序把结果或错误交还模型，模型再决定继续调用、向用户追问，或给出最终回答。接口返回成功只说明这一次操作完成，不证明用户的完整目标已经达成。"
+        ],
+        "flow": [
+          "工具定义",
+          "工具选择与参数",
+          "宿主执行",
+          "结果回流"
+        ]
+      },
+      {
+        "id": "missing",
+        "title": "缺少信息时，先补齐条件",
+        "paragraphs": [
+          "当必需参数缺失且无法从已授权的上下文获得时，应当追问，而不是猜测。工具不可用时，应当说明限制，而不是虚构调用结果。",
+          "观察一次调用时，可以分别检查工具选择、参数构造、执行结果与最终任务完成情况。这些维度能帮助区分模型决策问题和环境故障。"
+        ]
+      }
+    ],
+    "review_status": "reviewed"
+  },
+  {
+    "id": "mcp-architecture",
+    "title": "MCP 连接了什么",
+    "summary": "从 Host、Client、Server 到具体工具，理解协议的分工。",
+    "category": "MCP 协议",
+    "level": "入门",
+    "minutes": 5,
+    "icon": "network",
+    "updatedAt": "2026-11-03",
+    "tags": [
+      "MCP",
+      "Host",
+      "Client",
+      "Server",
+      "tools/list",
+      "tools/call"
+    ],
+    "sources": [
+      {
+        "title": "MCP · Architecture overview",
+        "url": "https://modelcontextprotocol.io/docs/2026-07-28/learn/architecture",
+        "version": "2026-07-28"
+      },
+      {
+        "title": "MCP · Tools specification",
+        "url": "https://modelcontextprotocol.io/specification/2025-11-25/server/tools",
+        "version": "2025-11-25"
+      }
+    ],
+    "sections": [
+      {
+        "id": "roles",
+        "title": "三个角色，一组连接",
+        "paragraphs": [
+          "Host 是用户使用的 AI 应用，负责管理模型交互和能力接入。Client 由 Host 创建，负责与特定 Server 通信。Server 向应用提供可访问的工具、资源或其他协议能力。",
+          "一个 Server 可以暴露多个工具。例如一个论文服务可以同时提供搜索、读取摘要与查询引用等入口。因此，一个 Server 不等于一个 tool；统计服务规模和工具规模时必须分开。"
+        ],
+        "flow": [
+          "AI 应用 · Host",
+          "协议客户端 · Client",
+          "能力服务 · Server",
+          "具体工具 · Tools"
+        ]
+      },
+      {
+        "id": "discovery",
+        "title": "发现与调用是两个阶段",
+        "paragraphs": [
+          "支持工具的 Server 通过能力协商声明相关支持。客户端可以使用 tools/list 读取工具定义，再使用 tools/call 调用具体工具并传入参数。返回值可能是内容或错误，由应用继续处理。",
+          "协议规范了连接和数据交换，但不替应用选择具体模型，也不决定规划策略。应用可以把部分定义直接交给模型，或先搜索候选再按需加载；这些属于宿主系统的设计。"
+        ]
+      },
+      {
+        "id": "boundary",
+        "title": "协议标准化，不等于能力保证",
+        "paragraphs": [
+          "使用 MCP 不会自动使工具描述更准确，也不会保证模型选对工具、参数正确或最终目标完成。权限控制、可信执行、预算与结果核验依然需要应用实现。",
+          "理解 MCP 的价值，可以从减少重复接入工作入手；评价 Agent 的能力，则还需要观察真实任务与调用过程。协议兼容性和任务成功率是不同问题。"
+        ]
+      }
+    ],
+    "review_status": "reviewed"
+  },
+  {
+    "id": "tool-discovery",
+    "title": "工具太多时，先找还是全给",
+    "summary": "候选目录、可见定义与真正调用数量，为什么要分开看。",
+    "category": "工具调用",
+    "level": "进阶",
+    "minutes": 4,
+    "icon": "search",
+    "updatedAt": "2026-11-03",
+    "tags": [
+      "tool discovery",
+      "工具发现",
+      "检索",
+      "retrieval",
+      "海量工具",
+      "候选"
+    ],
+    "sources": [
+      {
+        "title": "Anthropic · Code execution with MCP",
+        "url": "https://www.anthropic.com/research/code-execution-with-mcp",
+        "version": "2025-11-04"
+      },
+      {
+        "title": "LiveMCPBench · 官方实现",
+        "url": "https://github.com/icip-cas/LiveMCPBench",
+        "version": "运行配置须另行固定 commit"
+      }
+    ],
+    "sections": [
+      {
+        "id": "load",
+        "title": "定义也会占用上下文",
+        "paragraphs": [
+          "工具名称、说明、参数和返回结构都会消耗上下文。当可接入的工具很多时，把完整目录一次性提供给模型，会增加输入量，也可能让相似工具更难区分。",
+          "一种思路是先在目录中检索候选，再加载相关工具的完整定义。另一种思路是在执行途中发现能力缺口时再次检索。是否有效取决于任务与检索质量，不能只看输入量下降。"
+        ]
+      },
+      {
+        "id": "counts",
+        "title": "把五种数量分开",
+        "paragraphs": [
+          "工具规模至少有五种常见口径：N 是目录候选总量，A 是当前会话授权且可用的数量，K 是当前决策轮向模型提供完整定义的数量，U 是有效方案所需的不同工具数，C 是实际发生的调用次数。这个记号是本项目整理资料时采用的计量约定。",
+          "目录里有很多工具，并不意味着每一题都面对全部工具；调用次数很多，也不意味着使用了很多种工具。论文、界面和实验报告中的数字应当标明统计对象。"
+        ],
+        "code": "目录 N → 会话可用 A → 当前可见 K → 任务所需 U\n实际调用次数 C 单独统计；同一工具可以重复调用。"
+      },
+      {
+        "id": "recall",
+        "title": "检索遗漏会传递到后续步骤",
+        "paragraphs": [
+          "如果关键工具没有被检索出来，模型可能无法完成任务。尤其是某些中间步骤与用户问题的字面表述不相似，单纯依靠语义近似未必能覆盖完整依赖链。",
+          "因此需要同时检查候选召回与端到端成功：更小的候选集合是否漏掉必要能力？加入相似干扰工具后是否仍能选择？失败来自检索、参数，还是后续规划？这些要分开记录。"
+        ]
+      }
+    ],
+    "review_status": "reviewed"
+  },
+  {
+    "id": "planning",
+    "title": "多步任务，难在哪里",
+    "summary": "依赖、分支、并行和失败恢复，如何改变一条调用轨迹。",
+    "category": "规划与上下文",
+    "level": "进阶",
+    "minutes": 5,
+    "icon": "git-branch",
+    "updatedAt": "2026-11-03",
+    "tags": [
+      "planning",
+      "规划",
+      "并行",
+      "串行",
+      "多轮",
+      "multi turn",
+      "恢复"
+    ],
+    "sources": [
+      {
+        "title": "Anthropic · Building effective agents",
+        "url": "https://www.anthropic.com/research/building-effective-agents",
+        "version": "2024-12-19"
+      }
+    ],
+    "sections": [
+      {
+        "id": "dependency",
+        "title": "先看步骤是否互相依赖",
+        "paragraphs": [
+          "查询两篇互不依赖的论文摘要，可以并行执行；根据第一步查到的论文 ID 再读取全文，则存在串行依赖。并行的前提是后续操作不依赖尚未获得的输入，并且不会产生互相冲突的状态变化。",
+          "条件分支会进一步改变路径。例如搜索没有结果时改写查询，文档缺少数据时说明限制。规划能力体现在根据观察调整过程，不只是提前列一串步骤。"
+        ],
+        "flow": [
+          "查询实体",
+          "读取关联资料",
+          "检查条件",
+          "汇总结果"
+        ]
+      },
+      {
+        "id": "turns",
+        "title": "多步调用与用户多轮不同",
+        "paragraphs": [
+          "单个用户问题可以触发很多次工具调用，这属于任务内多步执行。用户追问、修改条件或引用上一轮信息，则增加了用户侧的多轮对话。两者可能同时出现，也可以彼此独立。",
+          "报告任务复杂度时，应分别记录用户轮数、模型决策轮数、不同工具数和调用次数。只说一个任务有十轮，无法知道是在测哪一种能力。"
+        ]
+      },
+      {
+        "id": "recovery",
+        "title": "失败之后还要正确结束",
+        "paragraphs": [
+          "网络超时、工具返回空结果、参数错误和权限不足，需要不同的处理方式。对于可能产生副作用的操作，重试前尤其需要核实是否已执行；不能因为没有收到响应就无限重复。",
+          "最终检查应围绕用户目标与必要约束。接口都调用成功，仍可能漏掉一个子目标；某一步失败，也可能通过其他有效路径完成。能够解释失败并在信息不足时正确停止，也是可靠执行的一部分。"
+        ]
+      }
+    ],
+    "review_status": "reviewed"
+  },
+  {
+    "id": "context-and-skills",
+    "title": "上下文、Skill 与记忆",
+    "summary": "区分当前证据、操作指南和跨任务信息，避免把它们混成一种能力。",
+    "category": "规划与上下文",
+    "level": "进阶",
+    "minutes": 5,
+    "icon": "layers",
+    "updatedAt": "2026-11-03",
+    "tags": [
+      "context",
+      "上下文",
+      "skill",
+      "技能",
+      "memory",
+      "记忆",
+      "RAG"
+    ],
+    "sources": [
+      {
+        "title": "Anthropic · Equipping agents with Agent Skills",
+        "url": "https://www.anthropic.com/research/equipping-agents-for-the-real-world-with-agent-skills",
+        "version": "机制介绍，具体实现以平台版本为准"
+      },
+      {
+        "title": "LangChain · Retrieval",
+        "url": "https://docs.langchain.com/oss/python/deepagents/retrieval",
+        "version": "2026-11-03 核查入口"
+      }
+    ],
+    "sections": [
+      {
+        "id": "context",
+        "title": "上下文是这一次决策能看到的信息",
+        "paragraphs": [
+          "用户问题、系统规则、工具定义、历史消息和返回结果都可能进入上下文。上下文窗口有限，保留什么、压缩什么、何时重新检索，会影响模型接下来的判断。",
+          "本网站的资料答疑采用检索增强生成（RAG）：后端从已审核内容中找到相关片段，再把证据交给模型回答。模型通过本次输入收到资料，这并不改变模型权重，也不意味着它自行读到了整个本地文件夹。"
+        ]
+      },
+      {
+        "id": "skills",
+        "title": "Skill 是指南，工具是执行入口",
+        "paragraphs": [
+          "Skill 通常组织某一类任务的步骤说明、参考资料或辅助脚本，帮助 Agent 按约定完成工作。它可以指导模型选择和组合多个工具，但本身不等同于一次工具调用。",
+          "例如，一份文献对比 Skill 可以要求先核对版本、再逐条归纳，并使用搜索与文档读取工具取得材料。评价时需要说明模型是否获得了这样的额外指导，不能把辅助条件不同的成绩直接混排。"
+        ]
+      },
+      {
+        "id": "memory",
+        "title": "记忆的作用和边界要说明",
+        "paragraphs": [
+          "记忆通常指系统在多个步骤或任务之间保留、筛选和重新提供的信息。不同系统可能把偏好、历史事实或任务状态作为记忆，具体机制并不统一。",
+          "被保存的信息也可能过时或有误。当前工具结果、检索证据和历史记忆应保留出处与时间；回答时不能把记忆当成已核验的实时事实。对于本网站，已审核知识与来源是答疑依据，原始开发日志和密钥不进入索引。"
+        ]
+      }
+    ],
+    "review_status": "reviewed"
+  },
+  {
+    "id": "reading-benchmarks",
+    "title": "怎样读懂一个 Benchmark 分数",
+    "summary": "先看任务与评分方式，再看成功率和模型名。",
+    "category": "评测与前沿",
+    "level": "进阶",
+    "minutes": 5,
+    "icon": "chart",
+    "updatedAt": "2026-11-03",
+    "tags": [
+      "benchmark",
+      "评测",
+      "BFCL",
+      "LiveMCPBench",
+      "准确率",
+      "成功率",
+      "子集"
+    ],
+    "sources": [
+      {
+        "title": "BFCL · 官方代码与运行说明",
+        "url": "https://github.com/ShishirPatil/gorilla/tree/main/berkeley-function-call-leaderboard",
+        "version": "子集与评测版本需固定"
+      },
+      {
+        "title": "LiveMCPBench · 官方代码与评审流程",
+        "url": "https://github.com/icip-cas/LiveMCPBench",
+        "version": "本项目未提供官方基准的团队实测成绩"
+      }
+    ],
+    "sections": [
+      {
+        "id": "scope",
+        "title": "每个分数都有范围",
+        "paragraphs": [
+          "Benchmark 是一组任务、运行条件和评分方法的组合。工具选择与参数匹配、真实执行后的状态、最终答案的事实覆盖，测量的是不同层次。AST 或格式匹配分数不能直接解释成真实业务任务成功率。",
+          "阅读结果时先问：任务来自哪里、模型看到了哪些工具、是否有检索器或额外指南、评分依赖程序还是评审模型？同一个模型名并不能保证实验条件相同。"
+        ]
+      },
+      {
+        "id": "two-benchmarks",
+        "title": "BFCL 与 LiveMCPBench 在测什么",
+        "paragraphs": [
+          "BFCL 围绕模型的函数调用能力设置不同任务类别；具体类别与评分方式应以选定版本的官方说明为准。它不是把所有真实业务任务统一折成一个分数。",
+          "LiveMCPBench 关注真实 MCP 环境中的工具发现、跨服务路由与多工具组合，以任务结果评审检查是否完成目标。它的环境包括可部署的 MCP 服务；运行前应固定代码版本，按照官方说明启动服务、配置模型和评审器，并核对当前任务集。工具服务可能依赖网络或外部数据，环境故障应与模型任务失败分开记录。"
+        ]
+      },
+      {
+        "id": "denominator",
+        "title": "看清分子、分母和缺失记录",
+        "paragraphs": [
+          "成功率必须同时展示成功数量与任务数量。环境失败、评分失败和未执行样本也要保留，不能仅展示成功轨迹。不同尝试与不同任务应分开计数。",
+          "子集是完整基准的一部分。抽样规则、任务类别和样本量都会影响观察，因此子集结果不能冒充官方全量成绩。重复尝试挑到成功后，只留下最后一次，也会改变结论的含义。"
+        ]
+      },
+      {
+        "id": "limits",
+        "title": "单步正确不等于整项任务完成",
+        "paragraphs": [
+          "单次调用可能选对工具、填对参数，但长任务仍可能因为漏掉依赖、提前停止或错误综合而失败。端到端成功应直接根据任务目标验证，而不是由单步准确率推算。",
+          "比较模型或方法时，尽量固定任务 ID、工具环境、提示、预算与评分器。小样本适合定位问题和展示案例，不应仅凭一个高分宣称普遍领先。本项目的实测记录与教学演示分别呈现。"
+        ]
+      }
+    ],
+    "review_status": "reviewed"
+  },
+  {
+    "id": "frontiers",
+    "title": "从工具调用走向可靠的 Agent",
+    "summary": "带着三个具体问题，理解当前研究的探索方向。",
+    "category": "评测与前沿",
+    "level": "探索",
+    "minutes": 5,
+    "icon": "compass",
+    "updatedAt": "2026-11-03",
+    "tags": [
+      "前沿",
+      "研究",
+      "可靠性",
+      "海量工具",
+      "检索",
+      "规划",
+      "评测"
+    ],
+    "sources": [
+      {
+        "title": "Anthropic · Code execution with MCP",
+        "url": "https://www.anthropic.com/research/code-execution-with-mcp",
+        "version": "2025-11-04"
+      },
+      {
+        "title": "LiveMCPBench · Can Agents Navigate an Ocean of MCP Tools?",
+        "url": "https://arxiv.org/abs/2508.01780",
+        "version": "论文与实现配置须分别核对"
+      }
+    ],
+    "sections": [
+      {
+        "id": "discovery",
+        "title": "怎样发现真正需要的工具",
+        "paragraphs": [
+          "当目录变大，工具描述、候选选择与按需加载共同决定成本和可用性。研究问题不只是能检索多少工具，而是能否召回任务真正需要的能力，并在缺少信息时继续发现。",
+          "值得检查的证据包括：候选范围、困难干扰项、召回遗漏与最终任务完成情况。减少输入量是效率变化，不能自动等同于能力提升。"
+        ]
+      },
+      {
+        "id": "feedback",
+        "title": "怎样在长任务里持续修正",
+        "paragraphs": [
+          "多步任务容易累积早期错误。更可靠的系统需要观察实际返回、检查状态、处理分支，并在失败时选择有依据的恢复策略。",
+          "看轨迹比只看最后一句话更容易定位问题。工具找到了但参数错了、调用成功但综合错了、任务尚未完成却停止了，是不同的失败模式。预录回放让这些过程成为可以暂停检查的学习材料。"
+        ]
+      },
+      {
+        "id": "evidence",
+        "title": "怎样让改进可以被检验",
+        "paragraphs": [
+          "工具版本与在线数据可能变化，评审模型也可能有偏差。可复现研究需要记录任务、环境、提示、模型配置、评分与产物，并解释不能控制的部分。",
+          "这里按问题组织研究线索，不提供一份未经持续核验的最强模型榜单。阅读具体论文和项目时，请结合版本、条件与公开证据，再判断它对你的应用意味着什么。"
+        ]
+      }
+    ],
+    "review_status": "reviewed"
+  }
+]
