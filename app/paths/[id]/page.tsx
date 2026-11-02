@@ -1,0 +1,6 @@
+import Link from "next/link";
+import {notFound} from "next/navigation";
+import {paths,articleById} from "../../../lib/content";
+import {Icon} from "../../ui/icons";
+export function generateStaticParams(){return paths.map(p=>({id:p.id}));}
+export default async function PathPage({params}:{params:Promise<{id:string}>}){const {id}=await params;const p=paths.find(p=>p.id===id);if(!p)notFound();return <div className="path-detail"><Link href="/paths" className="back-link"><Icon name="arrow-left" size={15}/>学习路径</Link><div className="page-icon"><Icon name={p.icon} size={30}/></div><h1>{p.title}</h1><p className="article-lead">{p.summary}</p><div className="path-detail-meta"><span>{p.level}</span><span>{p.ids.length} 个单元</span><span>约 {p.ids.reduce((n,id)=>n+(articleById(id)?.minutes||0),0)} 分钟</span></div><div className="lesson-list">{p.ids.map((id,i)=>{const a=articleById(id)!;return <Link href={`/knowledge/${id}`} key={id}><span className="lesson-index">{String(i+1).padStart(2,"0")}</span><div><h2>{a.title}</h2><p>{a.summary}</p></div><span className="lesson-time">{a.minutes} 分钟</span><Icon name="arrow-right" size={17}/></Link>;})}</div><Link href={`/knowledge/${p.ids[0]}`} className="primary-button">开始学习<Icon name="arrow-right" size={16}/></Link></div>;}
