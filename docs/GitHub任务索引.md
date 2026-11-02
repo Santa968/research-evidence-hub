@@ -23,4 +23,3 @@
 里程碑：[Hackathon v0.1](https://github.com/triseven08/research-evidence-hub/milestone/1)，截止 2026-11-05 12:00（北京时间）；团队内部提交截止为 11:00。
 
 任务包与 3–6 人组合见 [协作与排期](协作与排期.md)；具体验收条件见 [任务清单](任务清单.md)。
-
