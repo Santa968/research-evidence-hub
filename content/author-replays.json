@@ -1,16 +1,372 @@
 [
- {"id":"live-arxiv","origin":"author_record","title":"找到一篇论文并介绍它","task":"介绍 arXiv 论文 2203.12277。","benchmark":"LiveMCPBench","run_id":null,"task_id":"7bda47e8-1b8b-4f1f-b67c-573a81417d36","attempt_id":null,"model":"Claude-Sonnet-4-20250514","recorded_at":null,"article_ids":["tool-discovery","reading-benchmarks"],"source_url":"https://github.com/icip-cas/LiveMCPBench/blob/36a51a1065dda49c1e503b87edf33a1e0b331a74/baseline/output/claude-sonnet-4-20250514_Qwen3-Embedding-0.6B.json","events":[
-  {"id":"e1","sequence":1,"type":"retrieve","title":"检索论文工具","tool_name":"route","arguments":{"query":"arxiv 或学术论文检索；根据论文 ID 获取信息"},"result":"模型请求能够依据 arXiv ID 获取论文信息的工具。此处为原始英文查询的中文摘要。","status":"success","duration_ms":null},
-  {"id":"e2","sequence":2,"type":"tool_result","title":"返回候选工具","tool_name":"route","arguments":{},"result":"候选包括 mcp-simple-arxiv 的 get_paper_data，支持根据 paper_id 获取论文信息。","status":"success","duration_ms":null},
-  {"id":"e3","sequence":3,"type":"tool_call","title":"查询论文","tool_name":"get_paper_data","arguments":{"paper_id":"2203.12277"},"result":"通过 mcp-simple-arxiv 查询指定论文。","status":"success","duration_ms":null},
-  {"id":"e4","sequence":4,"type":"tool_result","title":"返回论文信息","tool_name":"get_paper_data","arguments":{},"result":"返回论文标题 Unified Structure Generation for Universal Information Extraction 及作者、日期等信息。","status":"success","duration_ms":null},
-  {"id":"e5","sequence":5,"type":"final_answer","title":"整理论文介绍","tool_name":null,"arguments":{},"result":"模型依据返回信息介绍论文。作者公开的 DeepSeek-V3 评审将此题标为成功；这不代表团队进行了实测。","status":"success","duration_ms":null}
- ]},
- {"id":"toolbench-tree","origin":"author_record","title":"从 API 列表中查找机构","task":"查询指定报关机构的联系方式，并列出可用机构。","benchmark":"ToolBench","run_id":null,"task_id":"10-ChatGPT-DFSDT","attempt_id":null,"model":"ChatGPT-DFSDT","recorded_at":null,"article_ids":["tool-discovery","reading-benchmarks"],"source_url":"https://github.com/OpenBMB/ToolBench/blob/d56fdd89faf8c91fa135090b212bb9057ee5cfc2/data_example/answer/G1_answer/10_ChatGPT_DFS_woFilter_w2.json","events":[
-  {"id":"e1","sequence":1,"type":"tool_call","title":"查询机构列表","tool_name":"transitaires_for_transitaires","arguments":{},"result":"模型调用机构列表接口。","status":"success","duration_ms":null},
-  {"id":"e2","sequence":2,"type":"tool_result","title":"返回多个机构","tool_name":"transitaires_for_transitaires","arguments":{},"result":"接口返回多家机构的记录；联系方式和其他个人信息已省略。","status":"success","duration_ms":null},
-  {"id":"e3","sequence":3,"type":"tool_call","title":"查询一条机构记录","tool_name":"transitaire_for_transitaires","arguments":{"is_id":"ACT_AGENCE_CALEDONIENNE_DE_TRANSIT"},"result":"模型选择 ACT 对应的机构 ID 发起查询。","status":"success","duration_ms":null},
-  {"id":"e4","sequence":4,"type":"tool_result","title":"返回机构详情","tool_name":"transitaire_for_transitaires","arguments":{},"result":"接口返回所选机构详情；联系方式已省略。","status":"success","duration_ms":null},
-  {"id":"e5","sequence":5,"type":"final_answer","title":"提交最终回答","tool_name":"Finish","arguments":{},"result":"最终回答把 ACT 的详情作为所请求机构的联系方式，且未列出全部机构。工具返回成功不代表任务答案正确。此为公开轨迹的单条路径摘要。","status":"success","duration_ms":null}
- ]}
+  {
+    "id": "live-arxiv",
+    "origin": "author_record",
+    "title": "找到一篇论文并介绍它",
+    "task": "用户要求介绍 arXiv 论文 2203.12277。评测关注 Agent 能否找到相关工具、获取论文信息并给出介绍；任务标注还提出读取全文。",
+    "benchmark": "LiveMCPBench",
+    "run_id": null,
+    "task_id": "7bda47e8-1b8b-4f1f-b67c-573a81417d36",
+    "attempt_id": null,
+    "model": "Claude-Sonnet-4-20250514",
+    "recorded_at": null,
+    "article_ids": [
+      "tool-discovery",
+      "reading-benchmarks"
+    ],
+    "source_url": "https://github.com/icip-cas/LiveMCPBench/blob/36a51a1065dda49c1e503b87edf33a1e0b331a74/baseline/output/claude-sonnet-4-20250514_Qwen3-Embedding-0.6B.json",
+    "events": [
+      {
+        "id": "e1",
+        "sequence": 1,
+        "type": "retrieve",
+        "title": "检索论文工具",
+        "tool_name": "route",
+        "arguments": {
+          "query": "arxiv 或学术论文检索；根据论文 ID 获取信息"
+        },
+        "result": "模型向 route 提出能力需求：寻找可以通过 arXiv ID 获取论文信息的工具。这里搜索的是工具目录，而不是直接搜索论文正文。",
+        "status": "success",
+        "duration_ms": null
+      },
+      {
+        "id": "e2",
+        "sequence": 2,
+        "type": "tool_result",
+        "title": "返回候选工具",
+        "tool_name": "route",
+        "arguments": {},
+        "result": "route 返回 mcp-simple-arxiv 下的多个候选，包括能按 paper_id 获取论文元数据和摘要的 get_paper_data。模型可据此决定后续调用；返回候选不等于论文信息已获取。",
+        "status": "success",
+        "duration_ms": null
+      },
+      {
+        "id": "e3",
+        "sequence": 3,
+        "type": "tool_call",
+        "title": "查询论文",
+        "tool_name": "get_paper_data",
+        "arguments": {
+          "paper_id": "2203.12277"
+        },
+        "result": "模型选择 mcp-simple-arxiv 的 get_paper_data，并传入 paper_id 2203.12277。执行框架负责调用具体工具；论文 ID 是本题关键参数。",
+        "status": "success",
+        "duration_ms": null
+      },
+      {
+        "id": "e4",
+        "sequence": 4,
+        "type": "tool_result",
+        "title": "返回论文信息",
+        "tool_name": "get_paper_data",
+        "arguments": {},
+        "result": "工具返回标题、作者、发布时间、摘要和全文访问地址。它提供的是论文元数据和摘要；记录中没有后续调用 fetch 读取全文的事件。",
+        "status": "success",
+        "duration_ms": null
+      },
+      {
+        "id": "e5",
+        "sequence": 5,
+        "type": "final_answer",
+        "title": "整理论文介绍",
+        "tool_name": null,
+        "arguments": {},
+        "result": "模型根据返回信息介绍 UIE 框架及实验。作者公开的 DeepSeek-V3 评审把此题标为成功；任务标注包含读取全文，但此轨迹没有可见的全文读取调用，自动评审成功不等于每个标注步骤都发生。",
+        "status": "success",
+        "duration_ms": null
+      }
+    ]
+  },
+  {
+    "id": "toolbench-tree",
+    "origin": "author_record",
+    "title": "从 API 列表中查找机构",
+    "task": "用户要求列出可用报关机构，并查找 Gondrand 机构的联系方式。该案例来自作者公开调用树的一条路径，包含机构列表、单条详情查询与最终回答。",
+    "benchmark": "ToolBench",
+    "run_id": null,
+    "task_id": "10-ChatGPT-DFSDT",
+    "attempt_id": null,
+    "model": "ChatGPT-DFSDT",
+    "recorded_at": null,
+    "article_ids": [
+      "tool-discovery",
+      "reading-benchmarks"
+    ],
+    "source_url": "https://github.com/OpenBMB/ToolBench/blob/d56fdd89faf8c91fa135090b212bb9057ee5cfc2/data_example/answer/G1_answer/10_ChatGPT_DFS_woFilter_w2.json",
+    "events": [
+      {
+        "id": "e1",
+        "sequence": 1,
+        "type": "tool_call",
+        "title": "查询机构列表",
+        "tool_name": "transitaires_for_transitaires",
+        "arguments": {},
+        "result": "模型先调用 transitaires_for_transitaires 请求全部机构列表。此步骤目的是找到后续查询所需的机构标识；作者提供的样例已给出候选 API，不能据此声称发生了开域检索。",
+        "status": "success",
+        "duration_ms": null
+      },
+      {
+        "id": "e2",
+        "sequence": 2,
+        "type": "tool_result",
+        "title": "返回多个机构",
+        "tool_name": "transitaires_for_transitaires",
+        "arguments": {},
+        "result": "工具返回多家机构及其标识。这里保留结果类型而省略联系方式；列表返回成功只说明接口有响应，并不代表已经定位用户指定的 Gondrand。",
+        "status": "success",
+        "duration_ms": null
+      },
+      {
+        "id": "e3",
+        "sequence": 3,
+        "type": "tool_call",
+        "title": "查询一条机构记录",
+        "tool_name": "transitaire_for_transitaires",
+        "arguments": {
+          "is_id": "ACT_AGENCE_CALEDONIENNE_DE_TRANSIT"
+        },
+        "result": "模型使用 ACT_AGENCE_CALEDONIENNE_DE_TRANSIT 作为 is_id 调用详情接口。它查询的是 ACT，而任务要求 Gondrand；这个参数选择是理解最终答案偏差的关键。",
+        "status": "success",
+        "duration_ms": null
+      },
+      {
+        "id": "e4",
+        "sequence": 4,
+        "type": "tool_result",
+        "title": "返回机构详情",
+        "tool_name": "transitaire_for_transitaires",
+        "arguments": {},
+        "result": "接口返回 ACT 的机构详情。工具正常返回和模型选对目标是两件不同的事：该结果对应 ACT，不能直接当作 Gondrand 的资料。",
+        "status": "success",
+        "duration_ms": null
+      },
+      {
+        "id": "e5",
+        "sequence": 5,
+        "type": "final_answer",
+        "title": "提交最终回答",
+        "tool_name": "Finish",
+        "arguments": {},
+        "result": "最终回答将 ACT 的联系方式写成所请求的 Gondrand 信息，也没有完整列出机构。原始节点仅说明该路径输出了回答；本展示指出可见的目标不匹配，不额外推断官方评分。",
+        "status": "success",
+        "duration_ms": null
+      }
+    ]
+  },
+  {
+    "id": "live-parking",
+    "origin": "author_record",
+    "title": "故宫周边停车与游览",
+    "task": "用户计划游览北京故宫，希望找到 1 公里范围内的停车位置和有趣的活动或景点。",
+    "benchmark": "LiveMCPBench",
+    "run_id": null,
+    "task_id": "dda8ea55-629c-4ae8-ab87-0c81477ae615",
+    "attempt_id": null,
+    "model": "Claude-Sonnet-4-20250514",
+    "recorded_at": null,
+    "article_ids": [
+      "tool-discovery",
+      "reading-benchmarks"
+    ],
+    "source_url": "https://github.com/icip-cas/LiveMCPBench/blob/36a51a1065dda49c1e503b87edf33a1e0b331a74/baseline/output/claude-sonnet-4-20250514_Qwen3-Embedding-0.6B.json",
+    "events": [
+      {
+        "id": "e1",
+        "sequence": 1,
+        "type": "retrieve",
+        "title": "检索地图工具",
+        "tool_name": "route",
+        "arguments": {
+          "query": "地图服务：查找地标附近停车场与景点"
+        },
+        "result": "模型主动提出需要查找停车和附近景点的能力。这里查询的是工具目录，并非搜索结果。",
+        "status": "success",
+        "duration_ms": null
+      },
+      {
+        "id": "e2",
+        "sequence": 2,
+        "type": "tool_result",
+        "title": "返回工具候选",
+        "tool_name": "route",
+        "arguments": {},
+        "result": "检索器返回 osm-mcp-server 等候选，其中包含查找停车设施与附近地点的工具。",
+        "status": "success",
+        "duration_ms": null
+      },
+      {
+        "id": "e3",
+        "sequence": 3,
+        "type": "tool_call",
+        "title": "查找停车设施",
+        "tool_name": "find_parking_facilities",
+        "arguments": {
+          "latitude": 39.9163,
+          "longitude": 116.3972,
+          "radius": 1000
+        },
+        "result": "模型以给定坐标为中心，设置 1000 米半径查询停车设施。",
+        "status": "success",
+        "duration_ms": null
+      },
+      {
+        "id": "e4",
+        "sequence": 4,
+        "type": "tool_result",
+        "title": "停车结果为空",
+        "tool_name": "find_parking_facilities",
+        "arguments": {},
+        "result": "工具正常返回，但停车设施列表为空、数量为 0；这不证明现实中一定没有停车设施。",
+        "status": "success",
+        "duration_ms": null
+      },
+      {
+        "id": "e5",
+        "sequence": 5,
+        "type": "tool_call",
+        "title": "查找附近地点",
+        "tool_name": "find_nearby_places",
+        "arguments": {
+          "radius": 1000,
+          "categories": [
+            "tourism",
+            "amenity",
+            "shop",
+            "historic"
+          ],
+          "limit": 50
+        },
+        "result": "模型再搜索旅游、设施、商店和历史地点，中心点与停车查询相同。",
+        "status": "success",
+        "duration_ms": null
+      },
+      {
+        "id": "e6",
+        "sequence": 6,
+        "type": "tool_result",
+        "title": "返回附近地点",
+        "tool_name": "find_nearby_places",
+        "arguments": {},
+        "result": "工具返回分类地点，例如九龙壁等；地点结果包含坐标。",
+        "status": "success",
+        "duration_ms": null
+      },
+      {
+        "id": "e7",
+        "sequence": 7,
+        "type": "final_answer",
+        "title": "回答与评审",
+        "tool_name": null,
+        "arguments": {},
+        "result": "模型说明没有查询到停车设施并推荐附近地点；作者公开 DeepSeek-V3 评审标为失败，理由包括缺少具体停车信息及地点地址。工具无结果可能影响结果，但日志不足以断定现实世界没有停车场。",
+        "status": "failure",
+        "duration_ms": null
+      }
+    ]
+  },
+  {
+    "id": "toolbench-giveup",
+    "origin": "author_record",
+    "title": "包裹与邮编查询",
+    "task": "用户为慈善活动追踪捐赠包裹 GHI789，需要最新状态和位置，并要求用邮编 24680 查询场地地址。",
+    "benchmark": "ToolBench",
+    "run_id": null,
+    "task_id": "G2-10",
+    "attempt_id": null,
+    "model": "ChatGPT-DFSDT",
+    "recorded_at": null,
+    "article_ids": [
+      "tool-discovery",
+      "planning",
+      "reading-benchmarks"
+    ],
+    "source_url": "https://github.com/OpenBMB/ToolBench/blob/d56fdd89faf8c91fa135090b212bb9057ee5cfc2/data_example/answer/G2_answer/10_ChatGPT_DFS_woFilter_w2.json",
+    "events": [
+      {
+        "id": "e1",
+        "sequence": 1,
+        "type": "tool_call",
+        "title": "查询包裹",
+        "tool_name": "track_package_for_amex_australia_fastway_australia_tracking",
+        "arguments": {
+          "tracking_number": "GHI789"
+        },
+        "result": "模型用任务提供的运单号调用包裹追踪接口。该案例已给模型提供 API，不代表开域检索步骤。",
+        "status": "success",
+        "duration_ms": null
+      },
+      {
+        "id": "e2",
+        "sequence": 2,
+        "type": "tool_result",
+        "title": "未找到追踪信息",
+        "tool_name": "track_package_for_amex_australia_fastway_australia_tracking",
+        "arguments": {},
+        "result": "接口返回未找到追踪信息，无法据此获得包裹当前状态和位置。",
+        "status": "success",
+        "duration_ms": null
+      },
+      {
+        "id": "e3",
+        "sequence": 3,
+        "type": "tool_call",
+        "title": "尝试另一追踪接口",
+        "tool_name": "latest_for_suivi_colis",
+        "arguments": {
+          "colisid": "GHI789"
+        },
+        "result": "模型使用同一运单号改查另一追踪接口，尝试补充状态。",
+        "status": "success",
+        "duration_ms": null
+      },
+      {
+        "id": "e4",
+        "sequence": 4,
+        "type": "tool_result",
+        "title": "第二次返回为空",
+        "tool_name": "latest_for_suivi_colis",
+        "arguments": {},
+        "result": "第二个追踪接口的响应内容为空，未提供可用的状态或位置。",
+        "status": "success",
+        "duration_ms": null
+      },
+      {
+        "id": "e5",
+        "sequence": 5,
+        "type": "tool_call",
+        "title": "按邮编查地址",
+        "tool_name": "retorna_dados_do_endere_o_atrav_s_do_cep_for_cep_brazil",
+        "arguments": {
+          "cepnumber": "24680"
+        },
+        "result": "模型使用用户提供的邮编查询地址。",
+        "status": "success",
+        "duration_ms": null
+      },
+      {
+        "id": "e6",
+        "sequence": 6,
+        "type": "tool_result",
+        "title": "地址查询超时",
+        "tool_name": "retorna_dados_do_endere_o_atrav_s_do_cep_for_cep_brazil",
+        "arguments": {},
+        "result": "工具返回超时错误且响应为空；日志显示的是该次接口超时，不足以判断邮编本身是否有效。",
+        "status": "failure",
+        "duration_ms": null
+      },
+      {
+        "id": "e7",
+        "sequence": 7,
+        "type": "final_answer",
+        "title": "模型放弃该次尝试",
+        "tool_name": "Finish",
+        "arguments": {
+          "return_type": "give_up_and_restart"
+        },
+        "result": "模型以 give_up_and_restart 结束该次尝试，没有给出用户要求的状态、位置和地址。公开样例的 win 为 false；这不是经独立 ToolEval 核验的逐题评分。",
+        "status": "failure",
+        "duration_ms": null
+      }
+    ]
+  }
 ]
