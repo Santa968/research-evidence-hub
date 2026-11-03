@@ -13,7 +13,8 @@ export async function context(request:Request) {
   if(s.model!=="deepseek-flash")throw new ServiceError("SERVER_CONFIGURATION_REQUIRED",503);
   // 本地运行通常没有执行 D1 迁移；此时改用进程内存储，页面与提问都能直接跑通。
   // 需要与生产一致的 D1 行为时，在 .dev.vars 设置 QUOTA_STORE=d1。
-  const useD1=!!env.DB&&(!local||env.QUOTA_STORE==="d1");
+  const quotaStore=(env as unknown as Record<string,string|undefined>).QUOTA_STORE;
+  const useD1=!!env.DB&&(!local||quotaStore==="d1");
   const db:Database=useD1?(env.DB as unknown as Database):memoryStore;
   const cookieSecret=s.cookieSecret||(local?LOCAL_DEV_COOKIE_SECRET:"");
   let who;try{who=await identity(request,cookieSecret);}catch{throw new ServiceError("SERVER_CONFIGURATION_REQUIRED",503);}
