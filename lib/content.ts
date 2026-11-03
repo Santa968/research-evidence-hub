@@ -1,11 +1,14 @@
 import raw from "../content/articles.json" with { type: "json" };
 import rawRuns from "../content/experiments.json" with { type: "json" };
 import type {Experiment} from "./experiments.ts";
+import {benchmarks} from "./benchmarks.ts";
 
 export type Section = { id: string; title: string; paragraphs: string[]; bullets?: string[]; code?: string; flow?: string[] };
-export type Article = { id: string; title: string; summary: string; category: string; level: string; minutes: number; icon: string; updatedAt: string; review_status:string; tags: string[]; sources: { title: string; url: string; version?: string }[]; sections: Section[] };
-export const articles = (raw as Article[]).filter(a=>a.review_status==="reviewed");
-export const contentVersion = "2026-11-03.2";
+export type Article = { id: string; title: string; summary: string; category: string; level: string; minutes: number; icon: string; updatedAt: string; review_status:string; tags: string[]; sources: { title: string; url: string; version?: string }[]; sections: Section[]; href?:string };
+const benchmarkArticles:Article[]=benchmarks.map(b=>({id:`benchmark-${b.id}`,title:b.name,summary:b.summary,category:"评测与前沿",level:"研究",minutes:5,icon:"compass",updatedAt:"2026-11-03",review_status:"reviewed",tags:[b.name,"benchmark","工具检索","评测"],sources:[{title:b.sourceTitle,url:b.source}],sections:[{id:"overview",title:"测量范围与流程",paragraphs:[b.scope,b.candidates,b.control,b.metric,b.limits]}],href:`/benchmarks/${b.id}`}));
+export const articles = [...(raw as Article[]).filter(a=>a.review_status==="reviewed"),...benchmarkArticles];
+export const articleHref=(a:Article)=>a.href||`/knowledge/${a.id}`;
+export const contentVersion = "2026-11-03.3";
 export const categories = ["Agent 基础", "工具调用", "MCP 协议", "规划与上下文", "评测与前沿"];
 export const articleById = (id: string) => articles.find(a => a.id === id);
 export const paths = [
@@ -34,7 +37,7 @@ export function retrieve(question: string, articleId?: string): Chunk[] {
     const hits=terms.filter(t=>body.includes(t)||heading.includes(t));
     const explicit=a.tags.filter(t=>t.length>=2&&question.toLowerCase().includes(t.toLowerCase()));
     const score=hits.reduce((s,t)=>s+(sectionHeading.includes(t)?6:0)+(heading.includes(t)?3:0)+(body.includes(t)?2:0),0)+explicit.filter(t=>body.includes(t.toLowerCase())).length*8+(articleId===a.id&&hits.length?2:0);
-    if(hits.length && (hits.length>=2 || explicit.length || hits.some(t=>t.length>=4))) chunks.push({id:a.id+"#"+section.id, articleId:a.id,articleTitle:a.title,anchor:section.id,title:section.title,text,score});
+    if(hits.length && (hits.length>=2 || explicit.length || hits.some(t=>t.length>=4))) chunks.push({id:a.id+"#"+section.id, articleId:a.id,articleTitle:a.title,anchor:section.id,title:section.title,text,score,href:a.href?`${a.href}#${section.id}`:undefined});
   }
   for(const run of rawRuns as Experiment[]){
     const text=`团队实测：${run.benchmark}，模型 ${run.model}，${run.scope==="subset"?"任务子集":"完整任务集"}，${run.recorded_at}。${run.summary}\n计划 ${run.counts.planned}，成功 ${run.counts.succeeded}，任务失败 ${run.counts.task_failed}，环境失败 ${run.counts.environment_failed}，评分失败 ${run.counts.scoring_failed}，未运行 ${run.counts.not_run}。\n${run.metrics.map(m=>`${m.name}: ${m.value} ${m.unit}；口径：${m.denominator}`).join("\n")}\n方法 ${run.method}；评分器 ${run.scorer}；上游 ${run.upstream_commit}。`;

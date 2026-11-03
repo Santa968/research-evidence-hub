@@ -6,13 +6,14 @@ const count=z.number().int().nonnegative();
 const status=z.enum(["succeeded","task_failed","environment_failed","scoring_failed","not_run"]);
 const url=z.string().url().refine(v=>v.startsWith("https://"),"来源必须使用 HTTPS");
 export const replaySchema=z.object({
- id,origin:z.enum(["scripted_demo","recorded_run"]),title:text,task:text,benchmark:text,
+ id,origin:z.enum(["scripted_demo","recorded_run","author_record"]),title:text,task:text,benchmark:text,
  run_id:id.nullable(),task_id:id.nullable(),attempt_id:id.nullable(),model:nullableText,
- recorded_at:z.string().datetime({offset:true}).nullable(),article_ids:z.array(id),
+ recorded_at:z.string().datetime({offset:true}).nullable(),article_ids:z.array(id),source_url:url.optional(),
  events:z.array(z.object({id,sequence:z.number().int().positive(),type:z.enum(["retrieve","tool_call","tool_result","final_answer","error"]),title:text,tool_name:nullableText,arguments:z.record(z.unknown()),result:text,status:z.enum(["success","failure","pending"]),duration_ms:z.number().nonnegative().nullable(),call_id:id.optional(),depends_on:z.array(id).optional(),offset_ms:z.number().nonnegative().optional()}).strict()).min(1).max(2000),
 }).strict().superRefine((r,ctx)=>{
  if(r.origin==="recorded_run"&&(!r.run_id||!r.task_id||!r.attempt_id||!r.model||!r.recorded_at))ctx.addIssue({code:"custom",message:"真实回放必须关联运行、任务、尝试、模型和录制时间"});
  if(r.origin==="scripted_demo"&&(r.run_id||r.task_id||r.attempt_id||r.model||r.recorded_at))ctx.addIssue({code:"custom",message:"教学演示不能伪造真实运行元数据"});
+ if(r.origin==="author_record"&&(!r.source_url||!r.task_id||!r.model||r.run_id||r.attempt_id))ctx.addIssue({code:"custom",message:"作者轨迹必须注明来源、任务和模型，不能关联团队运行"});
  const ids=new Set<string>();
  r.events.forEach((e,i)=>{if(ids.has(e.id)||e.sequence!==i+1)ctx.addIssue({code:"custom",message:"事件 ID 必须唯一，sequence 必须从 1 连续递增"});if(e.depends_on?.some(d=>!ids.has(d)))ctx.addIssue({code:"custom",message:"事件依赖必须指向之前的事件"});ids.add(e.id);});
 });

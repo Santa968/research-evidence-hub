@@ -1,7 +1,7 @@
 "use client";
 import {useState,useEffect,useRef,createContext,useContext,useCallback} from "react";
 import {usePathname} from "next/navigation";
-import {articles,categories,searchArticles} from "../../lib/content";
+import {articles,categories,searchArticles,articleHref} from "../../lib/content";
 import {Icon} from "./icons";
 import {AskPanel} from "./ask-panel";
 const AskContext=createContext<()=>void>(()=>{});
@@ -15,7 +15,7 @@ export function Shell({children}:{children:React.ReactNode}) {
  const pathname=usePathname();const [search,setSearch]=useState(false),[ask,setAsk]=useState(false),[menu,setMenu]=useState(false),[query,setQuery]=useState("");
  const closeSearch=useCallback(()=>setSearch(false),[]),closeAsk=useCallback(()=>setAsk(false),[]);
  const articleId=pathname?.startsWith("/knowledge/")?pathname.split("/")[2]:undefined;
- const article=articles.find(a=>a.id===articleId);const mode=pathname?.startsWith("/paths")?"学习路径":pathname?.startsWith("/explore")||pathname?.startsWith("/replays")||pathname?.startsWith("/experiments")?"前沿探索":"知识库";
+ const article=articles.find(a=>a.id===articleId);const mode=pathname?.startsWith("/paths")?"学习路径":pathname?.startsWith("/explore")||pathname?.startsWith("/replays")||pathname?.startsWith("/experiments")||pathname?.startsWith("/benchmarks")?"前沿探索":"知识库";
  useEffect(()=>{setMenu(false);},[pathname]);
  useEffect(()=>{const handler=(e:KeyboardEvent)=>{if((e.metaKey||e.ctrlKey)&&e.key.toLowerCase()==="k"){e.preventDefault();setSearch(v=>!v);}};window.addEventListener("keydown",handler);return()=>window.removeEventListener("keydown",handler);},[]);
  return <AskContext.Provider value={()=>setAsk(true)}><div className="workspace"><a className="skip-link" href="#main">跳转到内容</a>
@@ -27,7 +27,7 @@ export function Shell({children}:{children:React.ReactNode}) {
  {menu&&<button aria-label="关闭导航" className="mobile-scrim" onClick={()=>setMenu(false)}/>}
  <div className="main-frame"><header className="topbar"><button className="icon-button mobile-menu" aria-label="打开导航" aria-expanded={menu} onClick={()=>setMenu(v=>!v)}><Icon name="menu"/></button><div className="breadcrumbs"><a href={mode==="知识库"?"/":mode==="学习路径"?"/paths":"/explore"}>{mode}</a>{article&&<><Icon name="chevron" size={13}/><span>{article.title}</span></>}{pathname?.startsWith("/replays/")&&<><Icon name="chevron" size={13}/><span>工具调用回放</span></>}</div><div className="top-actions"><button className="icon-button" aria-label="搜索知识" onClick={()=>setSearch(true)}><Icon name="search" size={17}/></button><button className="plain-button ask-button" onClick={()=>setAsk(true)}><Icon name="ask" size={16}/>提问</button></div></header>
  <main id="main" className="main-content">{children}</main><footer className="site-footer"><span>研知台</span><a href="https://github.com/triseven08/research-evidence-hub" target="_blank" rel="noreferrer">GitHub<Icon name="arrow-up-right" size={12}/></a></footer></div>
- {search&&<Modal onClose={closeSearch} label="搜索知识"><div className="search-input-row"><Icon name="search"/><input aria-label="搜索词" placeholder="搜索概念、工具或评测…" value={query} onChange={e=>setQuery(e.target.value)}/><button className="icon-button" aria-label="关闭搜索" onClick={closeSearch}><Icon name="x"/></button></div><div className="search-results">{searchArticles(query).map(a=><a key={a.id} href={`/knowledge/${a.id}`} onClick={()=>{setSearch(false);setQuery("");}}><Icon name={a.icon}/><div><strong>{a.title}</strong><span>{a.category}</span></div><Icon name="enter" size={14}/></a>)}{searchArticles(query).length===0&&<div className="empty-state">没有找到相关内容，试试“工具调用”或“MCP”。</div>}</div><div className="search-foot">选择内容开始阅读 <kbd>Esc 关闭</kbd></div></Modal>}
+ {search&&<Modal onClose={closeSearch} label="搜索知识"><div className="search-input-row"><Icon name="search"/><input aria-label="搜索词" placeholder="搜索概念、工具或评测…" value={query} onChange={e=>setQuery(e.target.value)}/><button className="icon-button" aria-label="关闭搜索" onClick={closeSearch}><Icon name="x"/></button></div><div className="search-results">{searchArticles(query).map(a=><a key={a.id} href={articleHref(a)} onClick={()=>{setSearch(false);setQuery("");}}><Icon name={a.icon}/><div><strong>{a.title}</strong><span>{a.category}</span></div><Icon name="enter" size={14}/></a>)}{searchArticles(query).length===0&&<div className="empty-state">没有找到相关内容，试试“工具调用”或“MCP”。</div>}</div><div className="search-foot">选择内容开始阅读 <kbd>Esc 关闭</kbd></div></Modal>}
  {ask&&<AskPanel articleId={articleId} onClose={closeAsk}/>}
  </div></AskContext.Provider>;
 }

@@ -1,0 +1,214 @@
+[
+  {
+    "id": "live-paper",
+    "label": "论文 v2 · 表 2",
+    "metric": "任务成功率",
+    "condition": "95 个任务；DeepSeek-V3 评审",
+    "url": "https://arxiv.org/html/2508.01780v2",
+    "accessed": "2026-11-03",
+    "note": "论文报告的历史结果。",
+    "rows": [
+      {
+        "model": "Claude-Sonnet-4-20250514",
+        "value": 78.95
+      },
+      {
+        "model": "Claude-Opus-4-20250514",
+        "value": 70.53
+      },
+      {
+        "model": "GPT-5",
+        "value": 52.63
+      },
+      {
+        "model": "Qwen3-235B-A22B",
+        "value": 48.42
+      },
+      {
+        "model": "DeepSeek-R1-0528",
+        "value": 48.42
+      },
+      {
+        "model": "GPT-5-Mini",
+        "value": 45.26
+      },
+      {
+        "model": "GPT-4.1-Mini",
+        "value": 44.21
+      },
+      {
+        "model": "Qwen2.5-72B-Instruct",
+        "value": 43.16
+      },
+      {
+        "model": "DeepSeek-V3-0324",
+        "value": 42.11
+      },
+      {
+        "model": "Gemini-2.5-Pro",
+        "value": 41.05
+      },
+      {
+        "model": "GPT-4.1",
+        "value": 38.95
+      },
+      {
+        "model": "Qwen3-32B",
+        "value": 30.53
+      }
+    ]
+  },
+  {
+    "id": "live-leaderboard",
+    "label": "官方榜单 · 2025 年快照",
+    "metric": "任务成功率",
+    "condition": "榜单截图所列条件；具体配置待核验",
+    "url": "https://docs.google.com/spreadsheets/d/1EXpgXq1VKw5A7l7-N2E9xt3w0eLJ2YPVPT-VrRxKZBw/edit?usp=sharing",
+    "accessed": "2026-11-03",
+    "note": "官方榜单提供外部查看入口；因截图数据的再发布许可尚未确认，本地不复制成绩。具体实验配置未记录。",
+    "rows": []
+  },
+  {
+    "id": "toolbench-win",
+    "label": "ToolEval · 默认评测集",
+    "metric": "Win Rate",
+    "condition": "官方页面选择项为 ChatGPT-ReACT；CSV 文件名与选择项不一致，参考口径待核实",
+    "url": "https://openbmb.github.io/ToolBench/",
+    "accessed": "2026-11-03",
+    "note": "比较对象为模型与 Agent 方法组合；Win Rate 不等于任务成功率。",
+    "rows": [
+      {
+        "model": "GPT4-DFSDT",
+        "value": 70.4
+      },
+      {
+        "model": "GPT4-ReACT",
+        "value": 64.4
+      },
+      {
+        "model": "ChatGPT-DFSDT",
+        "value": 64.3
+      },
+      {
+        "model": "ToolLLaMA-DFSDT-Retriever",
+        "value": 63.1
+      },
+      {
+        "model": "ToolLLaMA-DFSDT",
+        "value": 60
+      },
+      {
+        "model": "ChatGPT-ReACT",
+        "value": 50
+      },
+      {
+        "model": "Text-Davinci-003-DFSDT",
+        "value": 46.3
+      },
+      {
+        "model": "Claude-2-DFSDT",
+        "value": 43.5
+      },
+      {
+        "model": "Claude-2-ReACT",
+        "value": 34.4
+      },
+      {
+        "model": "Text-Davinci-003-ReACT",
+        "value": 33.2
+      }
+    ]
+  },
+  {
+    "id": "human-10",
+    "label": "论文表 II · 10 个候选",
+    "metric": "Top-1 命中率",
+    "condition": "500 条查询；每题 10 个候选工具",
+    "url": "https://arxiv.org/html/2602.23367",
+    "accessed": "2026-11-03",
+    "note": "同一候选数条件内比较；不是端到端任务成功率。",
+    "rows": [
+      {
+        "model": "GPT-4o-mini",
+        "value": 98.2
+      },
+      {
+        "model": "Claude 3.5 Haiku",
+        "value": 97.8
+      },
+      {
+        "model": "Gemini 2.0 Flash",
+        "value": 98.4
+      }
+    ]
+  },
+  {
+    "id": "human-50",
+    "label": "论文表 II · 50 个候选",
+    "metric": "Top-1 命中率",
+    "condition": "500 条查询；每题 50 个候选工具",
+    "url": "https://arxiv.org/html/2602.23367",
+    "accessed": "2026-11-03",
+    "note": "同一候选数条件内比较；不是端到端任务成功率。",
+    "rows": [
+      {
+        "model": "GPT-4o-mini",
+        "value": 92.4
+      },
+      {
+        "model": "Claude 3.5 Haiku",
+        "value": 91.9
+      },
+      {
+        "model": "Gemini 2.0 Flash",
+        "value": 93.6
+      }
+    ]
+  },
+  {
+    "id": "human-100",
+    "label": "论文表 II · 100 个候选",
+    "metric": "Top-1 命中率",
+    "condition": "500 条查询；每题 100 个候选工具",
+    "url": "https://arxiv.org/html/2602.23367",
+    "accessed": "2026-11-03",
+    "note": "同一候选数条件内比较；不是端到端任务成功率。",
+    "rows": [
+      {
+        "model": "GPT-4o-mini",
+        "value": 88.2
+      },
+      {
+        "model": "Claude 3.5 Haiku",
+        "value": 88.6
+      },
+      {
+        "model": "Gemini 2.0 Flash",
+        "value": 88.2
+      }
+    ]
+  },
+  {
+    "id": "zero-full",
+    "label": "论文表 · Full / 单轮 / MCP-Zero",
+    "metric": "检索准确率",
+    "condition": "API-Bank Full 测试集；单轮；MCP-Zero 方法",
+    "url": "https://arxiv.org/html/2506.01056",
+    "accessed": "2026-11-03",
+    "note": "论文表格使用的模型简称；以原文为准，不与任务成功率混排。",
+    "rows": [
+      {
+        "model": "Claude-3.5",
+        "value": 95.19
+      },
+      {
+        "model": "GPT-4.1",
+        "value": 95.19
+      },
+      {
+        "model": "Gemini-2.5",
+        "value": 96.63
+      }
+    ]
+  }
+]

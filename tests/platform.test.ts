@@ -67,7 +67,7 @@ test("signed visitor cookie is stable and tampering creates a new identity",asyn
  const secret="c".repeat(32);const first=await identity(new Request("https://example.com"),secret);const cookie=first.cookie.split(";")[0];const second=await identity(new Request("https://example.com",{headers:{cookie}}),secret);assert.equal(first.visitor,second.visitor);const tampered=await identity(new Request("https://example.com",{headers:{cookie:cookie+"x"}}),secret);assert.notEqual(first.visitor,tampered.visitor);assert.ok(first.cookie.includes("HttpOnly"));assert.ok(first.cookie.includes("Secure"));
 });
 test("all learning paths and sources refer to real approved content",()=>{
- assert.equal(articles.length,8);for(const p of paths)for(const id of p.ids)assert.ok(articles.some(a=>a.id===id));for(const a of articles){assert.ok(a.sources.length);for(const source of a.sources)assert.equal(new URL(source.url).protocol,"https:");}
+ assert.equal(articles.length,12);for(const id of ["livemcpbench","toolbench","humanmcp","mcp-zero"])assert.ok(articles.some(a=>a.href===`/benchmarks/${id}`));for(const p of paths)for(const id of p.ids)assert.ok(articles.some(a=>a.id===id));for(const a of articles){assert.ok(a.sources.length);for(const source of a.sources)assert.equal(new URL(source.url).protocol,"https:");}
 });
 const questions:[string,string][]=[
  ["Agent 与固定工作流有什么区别？","what-is-agent"],["模型提出工具调用后谁执行？","tool-calling"],["MCP Server 和一个 tool 有什么不同？","mcp-architecture"],["工具很多时为什么要检索？","tool-discovery"],["单任务多步和用户多轮有什么区别？","planning"],["并行工具调用适合什么条件？","planning"],["单步准确率能否代表任务成功率？","reading-benchmarks"],["Skill、记忆和上下文有什么区别？","context-and-skills"],["子集成绩能不能当作全量榜单？","reading-benchmarks"],["资料如何通过 RAG 提供给闭源模型？","context-and-skills"]];

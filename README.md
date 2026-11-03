@@ -1,6 +1,6 @@
 # 研知台 · Agent 知识探索
 
-围绕“知识挖掘与探索”，向用户介绍 Agent、工具调用与相关前沿方向。把已有调研整理成可阅读的知识库和学习路径，结合带引用答疑与真实实验案例帮助理解。
+围绕“知识挖掘与探索”，向用户介绍 Agent、工具调用与相关前沿方向。把已有调研整理成可阅读的知识库和学习路径，结合带引用答疑、公开评测结果和工具调用案例帮助理解。
 
 benchmark 展示保留预先录制的工具调用回放：查看任务的工具发现、调用、返回和结果，支持播放/暂停及逐步查看；播放已有记录不调用模型、不执行工具，也不消耗生成额度。
 
@@ -8,7 +8,7 @@ benchmark 展示保留预先录制的工具调用回放：查看任务的工具�
 - [资料与内容清单](docs/资料清单.md)：已有资料、学习内容和待补充信息。
 - [模型与知识库方案](docs/知识库与模型接入方案.md)：DeepSeek、检索、引用和费用控制。
 
-已实现 8 篇知识短文、3 条学习路径、分类与搜索、带引用答疑、实验结果详情及工具调用回放。当前回放为明确标注的教学演示；真实 benchmark 成绩和预录轨迹等待评测组提供，不用样例补造实测。
+已实现 8 篇知识短文、3 条学习路径及四项 benchmark 专题。前沿探索提供横向对照、来源和条件分组的外部成绩、流程解释及回放；论文成绩不是团队实测，榜单为人工核验快照，不承诺实时更新。LiveMCPBench 与 ToolBench 使用作者公开轨迹的脱敏摘要；HumanMCP 和 MCP-Zero 为论文机制示意。官方榜单截图再发布许可未确认，保留来源入口而不复制其成绩。
 
 视觉采用 [Notion Style](https://www.stylekit.top/zh/styles/notion-style)。内容优先，通过布局、留白和排版表达层次，删除不必要的副标题、说明与装饰。
 
@@ -34,9 +34,9 @@ npm run dev -- --port 5173 --hostname 127.0.0.1
 
 ## 内容与实验
 
-审核后的正文维护在 `content/articles.json`，学习路径在 `lib/content.ts`。仅 `review_status=reviewed` 的文章进入检索；原始调研附件不直接公开。
+审核后的正文维护在 `content/articles.json` 和 `content/benchmarks.json`，外部成绩快照在 `content/benchmark-results.json`，作者轨迹摘要在 `content/author-replays.json`，学习路径在 `lib/content.ts`。仅 `review_status=reviewed` 的文章进入检索；原始调研附件不直接公开。
 
-评测组将脱敏后的 `{experiment,replays}` JSON 交给平台，数据结构见 `lib/experiments.ts`；`tests/experiments.test.ts` 中的 fixture 只用于校验，不发布为成绩。
+团队自行评测属于可选扩展，并非首版必交成果。若团队未来进行评测，可将脱敏后的 `{experiment,replays}` JSON 交给平台，数据结构见 `lib/experiments.ts`；`tests/experiments.test.ts` 中的 fixture 只用于校验，不发布为成绩。
 
 ```powershell
 npm run import:experiment -- ./private-results/run.json --check

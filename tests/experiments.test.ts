@@ -23,3 +23,16 @@ test("import rejects credential fields and unreviewed article references",()=>{
  const secret=bundle();Object.assign(secret.experiment.config,{api_key:"fixture-secret"});assert.throws(()=>validateBundle(secret,["planning"]),/凭证/);
  assert.throws(()=>validateBundle(bundle(),[]),/文章/);
 });
+
+test("external author traces remain attributable and cannot enter team-run bundles",()=>{
+ const traces=JSON.parse(readFileSync(new URL("../content/author-replays.json",import.meta.url),"utf8"));
+ for(const trace of traces){assert.equal(replaySchema.parse(trace).origin,"author_record");assert.match(trace.source_url,/^https:\/\//);assert.throws(()=>replaySchema.parse({...trace,source_url:undefined}));const data=bundle();data.replays=[trace];assert.throws(()=>validateBundle(data,["planning"]));}
+});
+test("external scores retain source and condition; distinct groups do not get merged",()=>{
+ const benchmarks: {results:string[]}[]=JSON.parse(readFileSync(new URL("../content/benchmarks.json",import.meta.url),"utf8"));
+ const scores: {id:string;url:string;metric:string;condition:string;accessed:string;rows:{model:string;value:number}[]}[]=JSON.parse(readFileSync(new URL("../content/benchmark-results.json",import.meta.url),"utf8"));
+ assert.equal(benchmarks.length,4);assert.equal(new Set(scores.map(g=>g.id)).size,scores.length);
+ for(const b of benchmarks)for(const id of b.results)assert.ok(scores.some(g=>g.id===id));
+ for(const group of scores){assert.match(group.url,/^https:\/\//);assert.ok(group.metric&&group.condition&&group.accessed);for(const row of group.rows)assert.ok(row.model&&Number.isFinite(row.value));}
+ assert.notEqual(scores.find(g=>g.id==="live-paper")?.id,scores.find(g=>g.id==="live-leaderboard")?.id);
+});
